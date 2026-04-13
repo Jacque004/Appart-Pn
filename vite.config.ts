@@ -1,4 +1,4 @@
-import { copyFileSync } from "node:fs"
+import { writeFileSync } from "node:fs"
 import path from "node:path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
@@ -23,6 +23,9 @@ export default defineConfig(({ mode }) => {
         ? GITHUB_PAGES_BASE
         : "/"
 
+  /** Sans serveur : /Appart-Pn/logements → 404 GitHub ; on redirige puis on restaure l’URL (cf. spa-github-pages). */
+  const basePathRoot = base !== "/" ? base.replace(/\/$/, "") : ""
+
   return {
   base,
   test: {
@@ -36,11 +39,41 @@ export default defineConfig(({ mode }) => {
     tailwindcss(),
     {
       name: "github-pages-spa-fallback",
+      transformIndexHtml: {
+        order: "pre",
+        handler(html, ctx) {
+          if (ctx.server || !basePathRoot) return html
+          const restore = `<script>(function(){try{var k="appartpn-ghp-redirect";var r=sessionStorage.getItem(k);if(!r)return;sessionStorage.removeItem(k);history.replaceState(null,"",r)}catch(e){}})();</script>`
+          return html.replace("<head>", `<head>${restore}`)
+        },
+      },
       closeBundle() {
-        const index = path.resolve(__dirname, "dist/index.html")
+        if (!basePathRoot) return
         const fallback = path.resolve(__dirname, "dist/404.html")
+        const baseJson = JSON.stringify(basePathRoot)
+        const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redirection…</title>
+  <script>
+(function () {
+  var base = ${baseJson};
+  var path = location.pathname;
+  if (path === base || path === base + "/") return;
+  if (path.indexOf(base + "/") !== 0) return;
+  try {
+    sessionStorage.setItem("appartpn-ghp-redirect", path + location.search + location.hash);
+  } catch (e) {}
+  location.replace(base + "/");
+})();
+  </script>
+</head>
+<body></body>
+</html>
+`
         try {
-          copyFileSync(index, fallback)
+          writeFileSync(fallback, html, "utf8")
         } catch {
           /* dist absent (ex. vitest) */
         }
