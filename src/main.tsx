@@ -6,10 +6,13 @@ import { AuthProvider } from "@/contexts/auth-context"
 import App from "./App"
 import "./index.css"
 
+const routerBasename =
+  import.meta.env.BASE_URL.replace(/\/$/, "") || undefined
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange storageKey="appartpn-theme">
-      <BrowserRouter>
+      <BrowserRouter basename={routerBasename}>
         <AuthProvider>
           <App />
         </AuthProvider>

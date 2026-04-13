@@ -1,16 +1,52 @@
+import { copyFileSync } from "node:fs"
 import path from "node:path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
 
-export default defineConfig({
+/** Dépôt GitHub Pages : https://jacque004.github.io/Appart-Pn/ */
+const GITHUB_PAGES_BASE = "/Appart-Pn/"
+
+function normalizeBase(raw: string | undefined): string {
+  const t = raw?.trim()
+  if (!t || t === "/") return "/"
+  return t.endsWith("/") ? t : `${t}/`
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "")
+  const explicit = env.VITE_BASE?.trim()
+  const base =
+    explicit && explicit !== "/"
+      ? normalizeBase(explicit)
+      : mode === "production"
+        ? GITHUB_PAGES_BASE
+        : "/"
+
+  return {
+  base,
   test: {
     environment: "node",
     include: ["lib/**/*.test.ts"],
   },
   // Permet d’utiliser soit VITE_* soit les anciennes variables NEXT_PUBLIC_* (ex. projet migré depuis Next.js)
   envPrefix: ["VITE_", "NEXT_PUBLIC_"],
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: "github-pages-spa-fallback",
+      closeBundle() {
+        const index = path.resolve(__dirname, "dist/index.html")
+        const fallback = path.resolve(__dirname, "dist/404.html")
+        try {
+          copyFileSync(index, fallback)
+        } catch {
+          /* dist absent (ex. vitest) */
+        }
+      },
+    },
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "."),
@@ -43,4 +79,5 @@ export default defineConfig({
       },
     },
   },
+  }
 })
