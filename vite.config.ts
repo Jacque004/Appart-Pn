@@ -59,6 +59,11 @@ export default defineConfig(({ mode }) => {
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
+        // Entrée à la racine de dist : sinon les imports dynamiques résolvent
+        // `assets/x.js` depuis `.../assets/index.js` → .../assets/assets/x.js (404 sur GitHub Pages).
+        entryFileNames: "[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
         manualChunks(id) {
           if (!id.includes("node_modules")) return
           if (id.includes("@supabase")) return "supabase"
