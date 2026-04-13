@@ -1,5 +1,6 @@
-# Déploie le dossier dist sur GitHub Pages (pas les sources — sinon /src/main.tsx en 404).
-# Réglages dépôt : Settings → Pages → Build : GitHub Actions.
+# Build Vite puis pousse dist sur la branche gh-pages.
+# GitHub : Settings → Pages → Source : Deploy from a branch → Branch gh-pages / folder / (root)
+# (Si « GitHub Actions » est sélectionné sans workflow artifact, le site reste l’index source → 404 sur main.tsx.)
 name: Deploy GitHub Pages
 
 on:
@@ -7,16 +8,14 @@ on:
     branches: [main, master]
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,16 +31,9 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      - uses: actions/upload-pages-artifact@v3
+      - name: Publish dist on gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/deploy-pages@v4
-        id: deployment
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          enable_jekyll: false
