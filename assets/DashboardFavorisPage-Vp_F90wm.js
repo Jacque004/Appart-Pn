@@ -1,4 +1,4 @@
-import{r as c,j as e,L as d,N}from"./react-vendor-CIvLrXqm.js";import{c as p,C as v,B as g,e as y,f as _,b as w,D as F}from"./index-CR3CN4W0.js";import{H as f,j as E,n as A,o as C,p as P}from"./icons-DV7TGNmS.js";import"./supabase-Dh9noGnp.js";import"./radix-ui-B-mAS8y3.js";async function k(r){try{const i=p(),{data:a,error:o}=await i.from("favorites").select(`
+import{r as c,j as e,L as d,N}from"./react-vendor-CIvLrXqm.js";import{c as p,C as v,B as g,e as y,f as _,b as w,D as F}from"../index-BqayX_i-.js";import{H as f,j as E,n as A,o as C,p as P}from"./icons-DV7TGNmS.js";import"./supabase-Dh9noGnp.js";import"./radix-ui-B-mAS8y3.js";async function k(r){try{const i=p(),{data:a,error:o}=await i.from("favorites").select(`
         id,
         created_at,
         property_id,
